@@ -299,11 +299,11 @@ layouts = scfg.get('layouts', [
 if 'keys' in scfg and isinstance(scfg['keys'], list):
     keys.extend(scfg['keys'])
 
-widget_defaults = scfg.get('widget_defaults', {
+widget_defaults = {
     'font':'Ubuntu Sans Bold',
     'fontsize': 12,
     'padding': 4,
-})
+}.update(scfg.get('widget_defaults', {}))
 extension_defaults = scfg.get('extension_defaults', widget_defaults.copy())
 
 screens = scfg.get('screens', [
@@ -334,7 +334,7 @@ screens = scfg.get('screens', [
                 prompt=' {prompt} ',
             ),
             PwrLine(colors('NET_G', N_PWRL_BRIGHT), None,
-                           suffix=' ', fontsize=N_BAR_HEIGHT),
+                           suffix=' '*0, fontsize=N_BAR_HEIGHT),
             widget.TaskList(
                 # font='Ubuntu Bold',
                 border=colors('active', 0.8),
@@ -352,7 +352,7 @@ screens = scfg.get('screens', [
                 padding=6.5,
             ),
             PwrLine(None, colors('neutral', N_PWRL_BRIGHT),
-                    rtl=True, prefix=' ', fontsize=N_BAR_HEIGHT),
+                    rtl=True, prefix=' '*0, fontsize=N_BAR_HEIGHT),
             widget.Systray(background=colors('neutral', N_PWRL_BRIGHT)),
             widget.BatteryIcon(
                 theme_path=HOME+'/.config/qtile/battery-icons',
