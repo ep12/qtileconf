@@ -23,7 +23,12 @@ def TermCmd(program):
 hostname = os.uname()[1]
 HOME = os.environ.get('HOME', '')
 folder = os.path.dirname(os.path.realpath(__file__))
-scfg = import_from_file('%s/config_%s.py' % (folder, hostname)).__dict__
+_special_config = '%s/config_%s.py' % (folder, hostname)
+if os.path.isfile(_special_config):
+    scfg = import_from_file(_special_config).__dict__
+else:
+    print('You can add a machine-specific config here:\n%r' % _special_config)
+    scfg = {}
 
 
 mod = scfg.get('mod', 'mod4')
@@ -289,29 +294,19 @@ layouts = scfg.get('layouts', [
         change_size=10,
         **D_WINDOW_SETTINGS
     ),
-    # layout.Max(),
-    # layout.Floating(
-    #     max_border_width=0,
-    #     fullscreen_border_width=0,
-    #     change_ratio=0.05,
-    #     change_size=10,
-    #     **D_WINDOW_SETTINGS
-    # ),
-    # layout.Stack(num_stacks=2),
 ])
 
 if 'keys' in scfg and isinstance(scfg['keys'], list):
     keys.extend(scfg['keys'])
 
-widget_defaults = dict(
-    font='Ubuntu Sans Bold',
-    fontsize=12,
-    padding=4,
-    border_focus=colors('active'),
-)
-extension_defaults = widget_defaults.copy()
+widget_defaults = scfg.get('widget_defaults', {
+    'font':'Ubuntu Sans Bold',
+    'fontsize': 12,
+    'padding': 4,
+})
+extension_defaults = scfg.get('extension_defaults', widget_defaults.copy())
 
-screens = [
+screens = scfg.get('screens', [
     Screen(
         bottom=bar.Bar([
             widget.GroupBox(
@@ -397,15 +392,15 @@ screens = [
             ),
         ], N_BAR_HEIGHT, background=colors('barbackground')),
     ),
-]
+])
 
 # Drag floating layouts.
-mouse = [
+mouse = scfg.get('mouse', [
     Drag([mod], 'Button1', lazy.window.set_position_floating(),
          start=lazy.window.get_position()),
     Drag([mod], 'Button3', lazy.window.set_size_floating(),
          start=lazy.window.get_size()),
-]
+])
 
 dgroups_key_binder = None
 dgroups_app_rules = []  # type: List
@@ -433,4 +428,4 @@ floating_layout = layout.Floating(
 auto_fullscreen = True
 focus_on_window_activation = 'smart'
 # wmname = 'LG3D'  # Java UI support (who cares?)
-wmname = 'qtile'
+wmname = scfg.get('wmname', 'qtile')
