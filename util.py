@@ -17,7 +17,8 @@ def PwrLine(left_color='#ffff00',
             pwrtype='hortriangle',
             prefix='',
             suffix='',
-            fontsize=PWRLINE_DEFAULT_SIZE):
+            fontsize=PWRLINE_DEFAULT_SIZE,
+            font='Ubuntu Mono'):
     '''Returns a libqtile.widget.TextBox with the correct powerline symbol'''
     assert isinstance(rtl, bool)
     char = _PWRLINECHARS.get(pwrtype, '??')[rtl]
@@ -27,7 +28,7 @@ def PwrLine(left_color='#ffff00',
     else:
         fg = left_color
         bg = right_color
-    return widget.TextBox(prefix+char+suffix, fontsize=fontsize,
+    return widget.TextBox(prefix+char+suffix, fontsize=fontsize, font=font,
                           foreground=fg, background=bg, margin=0, padding=0)
 
 

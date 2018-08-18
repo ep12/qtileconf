@@ -259,6 +259,8 @@ keys = [
     Key([mod, 'shift'], 'r',
         lazy.spawncmd(prompt='#',
                       command='{} %s'.format(D_APPS['GUISUDO']))),
+    Key([mod, 'control'], 'r',
+        lazy.spawn('rofi -show drun')),
 ]
 
 for mods in ['M', 'MS']:
