@@ -60,7 +60,7 @@ class colorscheme:
             assert all(isinstance(x, tuple) and len(x) is 3
                        and all(isinstance(y, (float, int)) and 0 <= y <= 1 for y in x)
                        for x in names.values())
-        self.names = names
+            self.names = names
 
     def __call__(self, *args, **kwargs):
         args = list(args)

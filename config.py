@@ -42,7 +42,7 @@ N_GRAPH_WIDTH = scfg.get('N_GRAPH_WIDTH',    35  )
 N_GRAPH_FILL = scfg.get('N_GRAPH_FILL',       1.0)
 N_GRAPH_BORDER = scfg.get('N_GRAPH_BORDER',   0.2)
 
-D_APPS = scfg.get('D_APPS', {  # Default apps
+D_APPS = scfg.get('D_APPS', {  # Default apps, overwrite them all!
     'GUITERM':             'mate-terminal',
     'GUISUDO':             'lxsu',
     'GUIFILEMGR':          'pcmanfm',
@@ -54,7 +54,7 @@ D_APPS = scfg.get('D_APPS', {  # Default apps
     'BROWSER':             'lynx',
 })
 
-colors = colorscheme(scfg.get('colorscheme', {
+colors = {
     'red':                 (1.000, 0.000, 0.000),
     'orange':              (1.000, 0.600, 0.000),
     'yellow':              (1.000, 1.000, 0.000),
@@ -80,13 +80,16 @@ colors = colorscheme(scfg.get('colorscheme', {
     'SWAP_G':              (1.000, 0.200, 1.000),
     'HDD_G':               (1.000, 0.600, 0.000),
     'NET_G':               (0.000, 0.750, 1.000),
-}))
+}
+colors.update(scfg.get('colorscheme', {}))
+colors = colorscheme(colors)
 
-D_WINDOW_SETTINGS = scfg.get('D_WINDOW_SETTINGS', {
+D_WINDOW_SETTINGS = {
     'border_focus':        colors('active'),
     'border_normal':       colors('inactive'),
     'border_width':        N_BORDER_WIDTH,
-})
+}
+D_WINDOW_SETTINGS.update(scfg.get('D_WINDOW_SETTINGS', {}))
 
 graphbar = [
     # widget.TextBox('C', foreground=colors('CPU_G'), background=colors('CPU_G', N_PWRL_BRIGHT)),
@@ -303,7 +306,8 @@ widget_defaults = {
     'font':'Ubuntu Sans Bold',
     'fontsize': 12,
     'padding': 4,
-}.update(scfg.get('widget_defaults', {}))
+}
+widget_defaults.update(scfg.get('widget_defaults', {}))
 extension_defaults = scfg.get('extension_defaults', widget_defaults.copy())
 
 screens = scfg.get('screens', [
