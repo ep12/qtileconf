@@ -5,35 +5,24 @@ from libqtile.config import Key, Screen, Group, Drag, Click
 from libqtile.command import lazy
 from libqtile import layout, bar, widget, hook
 
-from importlib.util import spec_from_file_location, module_from_spec
+from util import colorscheme, PwrLine, TermCmd as _TermCmd, on_startup, import_from_file
 # try:
 #     from typing import List  # noqa: F401
 # except ImportError:
 #     pass
 
-# @hook.subscribe.startup_once
-@hook.subscribe.startup_complete
-def on_startup():
-    '''Run autoexec.sh on startup'''
-    print(dir(lazy.layout))
-    startupscript = os.path.expanduser('~/.config/qtile/autoexec.sh')
-    subprocess.call([startupscript])
-    hook.fire('screen_change')
+# hook.subscribe.startup_complete(on_startup)
+hook.subscribe.startup_once(on_startup)
 
 
-def import_from_file(file: str, module_name: str = 'mymodule'):
-    '''Imports a module from a file'''
-    assert os.path.isfile(file), '%r is not a file' % file
-    spec = spec_from_file_location(module_name, file)
-    module = module_from_spec(spec)
-    spec.loader.exec_module(module)
-    return module
+def TermCmd(program):
+    '''Wrapper for TermCmd (util module)'''
+    return _TermCmd(program, D_APPS)
 
 
 hostname = os.uname()[1]
 HOME = os.environ.get('HOME', '')
 folder = os.path.dirname(os.path.realpath(__file__))
-
 scfg = import_from_file('%s/config_%s.py' % (folder, hostname)).__dict__
 
 
@@ -41,17 +30,15 @@ mod = scfg.get('mod', 'mod4')
 mod_alt = scfg.get('mod_alt', 'mod1')
 
 
-N_BAR_HEIGHT = 28
-N_BORDER_WIDTH = 1
-N_PWRL_BRIGHT = 0.2   # 0.1
-N_GRAPH_WIDTH = 35
-N_GRAPH_FILL = 1.0    # 0.4
-N_GRAPH_BORDER = 0.2 # 0.2
+N_BAR_HEIGHT = scfg.get('N_BAR_HEIGHT',      28  )
+N_BORDER_WIDTH = scfg.get('N_BORDER_WIDTH',   1  )
+N_PWRL_BRIGHT = scfg.get('N_PWRL_BRIGHT',     0.2)
+N_GRAPH_WIDTH = scfg.get('N_GRAPH_WIDTH',    35  )
+N_GRAPH_FILL = scfg.get('N_GRAPH_FILL',       1.0)
+N_GRAPH_BORDER = scfg.get('N_GRAPH_BORDER',   0.2)
 
-
-D_APPS = {
+D_APPS = scfg.get('D_APPS', {  # Default apps
     'GUITERM':             'mate-terminal',
-    'GUITERM-EXECARG':     '-x',
     'GUISUDO':             'lxsu',
     'GUIFILEMGR':          'pcmanfm',
     'GUIEDITOR':           'leafpad',
@@ -60,95 +47,9 @@ D_APPS = {
     'FILEMGR':             'ranger',
     'EDITOR':              'vim',
     'BROWSER':             'lynx',
-    'M1':                  'lyx',
-    'M2':                  'blender',
-    'M3':                  'gimp',
-    'M4':                  'krita',
-    'M0':                  'atom',
-}
+})
 
-_PWRLINECHARS = {
-    'hortriangle': [u'\ue0b0', u'\ue0b2'],
-    'horarrow':    [u'\ue0b1', u'\ue0b3'],
-}
-
-
-def TermCmd(program):
-    argprefix = D_APPS.get('GUITERM-EXECARG')
-    if argprefix:
-        return '%s %s %s' % (D_APPS['GUITERM'], argprefix, program)
-    return '%s %s' % (D_APPS['GUITERM'], program)
-
-
-def PwrLine(left_color='#ffff00',
-            right_color='#ff00ff', *,
-            rtl=False,
-            pwrtype='hortriangle',
-            prefix='',
-            suffix=''):
-    # nonlocal N_BAR_HEIGHT, _PWRLINECHARS
-    assert isinstance(rtl, bool)
-    char = _PWRLINECHARS.get(pwrtype, '??')[rtl]
-    if rtl:
-        fg = right_color
-        bg = left_color
-    else:
-        fg = left_color
-        bg = right_color
-    return widget.TextBox(prefix+char+suffix, fontsize=N_BAR_HEIGHT,
-                          foreground=fg, background=bg, margin=0, padding=0)
-
-
-def _crop(f):
-    if f < 0:
-        f = 0.0
-    if f > 1:
-        f = 1.0
-    return '{:0>2x}'.format(int(round(255 * f)))
-
-
-class colorscheme:
-    '''color scheme provides a color storage and calculations'''
-    def __init__(self, names: dict = None):
-        if names is None:
-            self.names = {}
-        else:
-            assert isinstance(names, dict)
-            assert all(isinstance(x, str) for x in names.keys())
-            assert all(isinstance(x, tuple) and len(x) is 3
-                       and all(isinstance(y, (float, int)) and 0 <= y <= 1 for y in x)
-                       for x in names.values())
-        self.names = names
-
-    def __call__(self, *args, **kwargs):
-        args = list(args)
-        r, g, b = kwargs.get('r'), kwargs.get('g'), kwargs.get('b')
-        l = kwargs.get('l')
-        if isinstance(args[0], str) and args[0] in self.names.keys():
-            r, g, b = self.names[args[0]]
-            args.pop(0)
-        else:
-            if r is None and args:
-                r = float(args.pop(0))
-            else:
-                r = 0.0
-            if g is None and args:
-                g = float(args.pop(0))
-            else:
-                g = 0.0
-            if b is None and args:
-                b = float(args.pop(0))
-            else:
-                b = 0.0
-        if l is None:
-            if args:
-                l = float(args.pop(0))
-            else:
-                l = 1.0
-        return '#' + ''.join(_crop(x * l) for x in [r, g, b])
-
-
-colors = colorscheme({
+colors = colorscheme(scfg.get('colorscheme', {
     'red':                 (1.000, 0.000, 0.000),
     'orange':              (1.000, 0.600, 0.000),
     'yellow':              (1.000, 1.000, 0.000),
@@ -174,6 +75,12 @@ colors = colorscheme({
     'SWAP_G':              (1.000, 0.200, 1.000),
     'HDD_G':               (1.000, 0.600, 0.000),
     'NET_G':               (0.000, 0.750, 1.000),
+}))
+
+D_WINDOW_SETTINGS = scfg.get('D_WINDOW_SETTINGS', {
+    'border_focus':        colors('active'),
+    'border_normal':       colors('inactive'),
+    'border_width':        N_BORDER_WIDTH,
 })
 
 graphbar = [
@@ -187,7 +94,10 @@ graphbar = [
         graph_color=colors('CPU_G'),
         fill_color=colors('CPU_G', N_GRAPH_FILL),
     ),
-    PwrLine(colors('CPU_G', N_PWRL_BRIGHT), colors('RAM_G', N_PWRL_BRIGHT), rtl=True),
+    PwrLine(colors('CPU_G', N_PWRL_BRIGHT),
+            colors('RAM_G', N_PWRL_BRIGHT),
+            rtl=True,
+            fontsize=N_BAR_HEIGHT),
     # widget.TextBox('R', foreground=colors('RAM_G'), background=colors('RAM_G', N_PWRL_BRIGHT)),
     widget.MemoryGraph(
         width=N_GRAPH_WIDTH,
@@ -198,7 +108,10 @@ graphbar = [
         graph_color=colors('RAM_G'),
         fill_color=colors('RAM_G', N_GRAPH_FILL),
     ),
-    PwrLine(colors('RAM_G', N_PWRL_BRIGHT), colors('SWAP_G', N_PWRL_BRIGHT), rtl=True),
+    PwrLine(colors('RAM_G', N_PWRL_BRIGHT),
+            colors('SWAP_G', N_PWRL_BRIGHT),
+            rtl=True,
+            fontsize=N_BAR_HEIGHT),
     # widget.TextBox('S', foreground=colors('SWAP_G'), background=colors('SWAP_G', N_PWRL_BRIGHT)),
     widget.SwapGraph(
         width=N_GRAPH_WIDTH,
@@ -209,7 +122,10 @@ graphbar = [
         graph_color=colors('SWAP_G'),
         fill_color=colors('SWAP_G', N_GRAPH_FILL),
     ),
-    PwrLine(colors('SWAP_G', N_PWRL_BRIGHT), colors('HDD_G', N_PWRL_BRIGHT), rtl=True),
+    PwrLine(colors('SWAP_G', N_PWRL_BRIGHT),
+            colors('HDD_G', N_PWRL_BRIGHT),
+            rtl=True,
+            fontsize=N_BAR_HEIGHT),
     # widget.TextBox('H', foreground=colors('HDD_G'), background=colors('HDD_G', N_PWRL_BRIGHT)),
     widget.HDDBusyGraph(
         device='sda',
@@ -221,7 +137,10 @@ graphbar = [
         graph_color=colors('HDD_G'),
         fill_color=colors('HDD_G', N_GRAPH_FILL),
     ),
-    PwrLine(colors('HDD_G', N_PWRL_BRIGHT), colors('NET_G', N_PWRL_BRIGHT), rtl=True),
+    PwrLine(colors('HDD_G', N_PWRL_BRIGHT),
+            colors('NET_G', N_PWRL_BRIGHT),
+            rtl=True,
+            fontsize=N_BAR_HEIGHT),
     # widget.TextBox('N', foreground=colors('NET_G'), background=colors('NET_G', N_PWRL_BRIGHT)),
     widget.NetGraph(
         line_width=1,
@@ -353,51 +272,39 @@ for i in groups:
         Key([mod, 'control', 'shift'], i.name, lazy.window.togroup(i.name)),
     ])
 
-layouts = [
+layouts = scfg.get('layouts', [
     layout.MonadTall(
-        border_focus=colors('active'),
-        border_normal=colors('inactive'),
-        border_width=N_BORDER_WIDTH,
         ratio=0.5,
         min_ratio=0.01,
         max_ratio=0.99,
         change_ratio=0.05,
         change_size=10,
+        **D_WINDOW_SETTINGS
     ),
     layout.MonadWide(
-        border_focus=colors('active'),
-        border_normal=colors('inactive'),
-        border_width=N_BORDER_WIDTH,
         ratio=0.5,
         min_ratio=0.01,
         max_ratio=0.99,
         change_ratio=0.05,
         change_size=10,
+        **D_WINDOW_SETTINGS
     ),
     # layout.Max(),
-    layout.Floating(
-        border_focus=colors('active'),
-        border_normal=colors('inactive'),
-        border_width=N_BORDER_WIDTH,
-        max_border_width=0,
-        fullscreen_border_width=0,
-        change_ratio=0.05,
-        change_size=10,
-    ),
+    # layout.Floating(
+    #     max_border_width=0,
+    #     fullscreen_border_width=0,
+    #     change_ratio=0.05,
+    #     change_size=10,
+    #     **D_WINDOW_SETTINGS
+    # ),
     # layout.Stack(num_stacks=2),
-    # layout.TreeTab(
-    #     bg_color='0f0f0f',
-    #     active_bg='008fff',
-    #     inactive_bg='004f8f',
-    #     active_fg='ffffff',
-    #     inactive_fg='cccccc',
-    #     panel_width=250,
-    #     previous_on_rm=True,
-    # )
-]
+])
+
+if 'keys' in scfg and isinstance(scfg['keys'], list):
+    keys.extend(scfg['keys'])
 
 widget_defaults = dict(
-    font='Noto Sans Bold',
+    font='Ubuntu Sans Bold',
     fontsize=12,
     padding=4,
     border_focus=colors('active'),
@@ -431,7 +338,8 @@ screens = [
                 bell_style='audible',
                 prompt=' {prompt} ',
             ),
-            PwrLine(colors('NET_G', N_PWRL_BRIGHT), None, suffix=' '),
+            PwrLine(colors('NET_G', N_PWRL_BRIGHT), None,
+                           suffix=' ', fontsize=N_BAR_HEIGHT),
             widget.TaskList(
                 # font='Ubuntu Bold',
                 border=colors('active', 0.8),
@@ -448,7 +356,8 @@ screens = [
                 margin=0,
                 padding=6.5,
             ),
-            PwrLine(None, colors('neutral', N_PWRL_BRIGHT), rtl=True, prefix=' '),
+            PwrLine(None, colors('neutral', N_PWRL_BRIGHT),
+                    rtl=True, prefix=' ', fontsize=N_BAR_HEIGHT),
             widget.Systray(background=colors('neutral', N_PWRL_BRIGHT)),
             widget.BatteryIcon(
                 theme_path=HOME+'/.config/qtile/battery-icons',
@@ -459,9 +368,11 @@ screens = [
             #     format='{essid}: {percent:3.0%}',
             #     disconnected_message='not connected'
             # ),
-            PwrLine(colors('neutral', N_PWRL_BRIGHT), colors('CPU_G', N_PWRL_BRIGHT), rtl=True),
+            PwrLine(colors('neutral', N_PWRL_BRIGHT), colors('CPU_G', N_PWRL_BRIGHT),
+                    rtl=True, fontsize=N_BAR_HEIGHT),
             *graphbar,
-            PwrLine(colors('NET_G', N_PWRL_BRIGHT), colors('white'), rtl=True),
+            PwrLine(colors('NET_G', N_PWRL_BRIGHT), colors('white'),
+                    rtl=True, fontsize=N_BAR_HEIGHT),
             widget.CheckUpdates(
                 distro='Arch',
                 update_interval=60*15,
@@ -478,7 +389,7 @@ screens = [
                 foreground=colors('active'),
                 background=colors('white'),
             ),
-            PwrLine(colors('white'), colors('active'), rtl=True),
+            PwrLine(colors('white'), colors('active'), rtl=True, fontsize=N_BAR_HEIGHT),
             widget.Clock(
                 format='%2H:%2M:%2S',
                 foreground=colors('white'),
@@ -494,7 +405,6 @@ mouse = [
          start=lazy.window.get_position()),
     Drag([mod], 'Button3', lazy.window.set_size_floating(),
          start=lazy.window.get_size()),
-    # Click([mod], 'Button2', lazy.window.bring_to_front())
 ]
 
 dgroups_key_binder = None
@@ -503,23 +413,24 @@ main = None
 follow_mouse_focus = True
 bring_front_click = False
 cursor_warp = True
-floating_layout = layout.Floating(float_rules=[
-    {'wmclass': 'confirm'},
-    {'wmclass': 'dialog'},
-    {'wmclass': 'download'},
-    {'wmclass': 'error'},
-    {'wmclass': 'file_progress'},
-    {'wmclass': 'notification'},
-    {'wmclass': 'splash'},
-    {'wmclass': 'toolbar'},
-    {'wmclass': 'confirmreset'},  # gitk
-    {'wmclass': 'makebranch'},  # gitk
-    {'wmclass': 'maketag'},  # gitk
-    {'wname': 'branchdialog'},  # gitk
-    {'wname': 'pinentry'},  # GPG key password entry
-    {'wmclass': 'ssh-askpass'},  # ssh-askpass
-])
+floating_layout = layout.Floating(
+    float_rules=[{'wmclass': 'confirm'},
+                 {'wmclass': 'dialog'},
+                 {'wmclass': 'download'},
+                 {'wmclass': 'error'},
+                 {'wmclass': 'file_progress'},
+                 {'wmclass': 'notification'},
+                 {'wmclass': 'splash'},
+                 {'wmclass': 'toolbar'},
+                 {'wmclass': 'confirmreset'},  # gitk
+                 {'wmclass': 'makebranch'},  # gitk
+                 {'wmclass': 'maketag'},  # gitk
+                 {'wname': 'branchdialog'},  # gitk
+                 {'wname': 'pinentry'},  # GPG key password entry
+                 {'wmclass': 'ssh-askpass'},  # ssh-askpass
+                ],
+                **D_WINDOW_SETTINGS)
 auto_fullscreen = True
 focus_on_window_activation = 'smart'
-# wmname = 'LG3D'  # Java UI support
+# wmname = 'LG3D'  # Java UI support (who cares?)
 wmname = 'qtile'

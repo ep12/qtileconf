@@ -1,9 +1,13 @@
 # About this config
 This config uses:
-+ Noto fonts
++ Ubuntu fonts, powerline-patched:
++ debian-based: install *fonts-powerline*
 
 # Screenshots
-
+## Desktop without programs
+![Desktop out of the box](desktop-vanilla.png)  
+## Demo windows
+![Desktop with some programs](desktop-demo.png)  
 
 # Keybindings
 MACS | Key            | Action                                 | Status
@@ -49,3 +53,10 @@ MA== | e              | prompt: GUI editor                     | ✓
 MA=S | e              | prompt: GUI editor (sudo)              | ✓
 M=== | r              | prompt: run                            | ✓
 M==S | r              | prompt: run (sudo)                     | ✓
+
+# Graphs
+1. CPU
+1. RAM
+1. SWAP
+1. HDD
+1. NET
