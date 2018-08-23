@@ -1,4 +1,3 @@
-'''Utilities like color schemes etc.'''
 import os
 from importlib.util import spec_from_file_location, module_from_spec
 
@@ -18,7 +17,7 @@ def PwrLine(left_color='#ffff00',
             prefix='',
             suffix='',
             fontsize=PWRLINE_DEFAULT_SIZE,
-            font='Ubuntu Mono'):
+            font='Source Code Pro Medium'):
     '''Returns a libqtile.widget.TextBox with the correct powerline symbol'''
     assert isinstance(rtl, bool)
     char = _PWRLINECHARS.get(pwrtype, '??')[rtl]
