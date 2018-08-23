@@ -1,4 +1,5 @@
 import os
+import subprocess
 from importlib.util import spec_from_file_location, module_from_spec
 
 from libqtile import widget
@@ -17,7 +18,7 @@ def PwrLine(left_color='#ffff00',
             prefix='',
             suffix='',
             fontsize=PWRLINE_DEFAULT_SIZE,
-            font='Source Code Pro Medium'):
+                font='Source Code Pro Medium'):
     '''Returns a libqtile.widget.TextBox with the correct powerline symbol'''
     assert isinstance(rtl, bool)
     char = _PWRLINECHARS.get(pwrtype, '??')[rtl]
