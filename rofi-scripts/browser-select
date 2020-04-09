@@ -1,0 +1,38 @@
+#!/usr/bin/fish
+set -l config 'browser-select.txt'
+set -l FN (status filename)
+set -l FD (dirname "$FN")
+echo "$FD"
+set totest "$PWD"
+if test "$FD" != '.'
+	set -a totest "$FD"
+	set -a totest "$PWD/$FD"
+end
+for prefix in $totest
+	if test -e "$prefix/$config"
+		set config_path "$prefix/$config"
+		break
+		echo "PWD: '$PWD', FD: '$FD'"
+		echo "Config file found: '$config_path'"
+	end
+end
+if test -z "$config_path"
+	echo "No config file found."
+	exit 1
+end
+set SEL (rofi -input "$config_path" -fullscreen -p "select" -dmenu -no-custom -no-click-to-exit 2>/dev/null)
+if test -n "$SEL"
+	set CMD (echo -n "$SEL" | sed -E 's/^[^\(]+\((.*)\)/\1/g')
+	set MODE (echo -n "$SEL" | egrep -o --color=never '\[(GUI |TERM)\]')
+	echo Selected: $CMD
+	echo Mode: $MODE
+	if test "$MODE" = "[GUI ]"
+		set CMD (shellsplit "$CMD")
+		echo $CMD
+		exec $CMD
+	else if test "$MODE" = "[TERM]"
+		guiterm "$CMD"
+	end
+else
+	echo "Nothing selected"
+end
