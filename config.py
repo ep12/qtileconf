@@ -4,7 +4,10 @@ import subprocess
 import re
 
 from libqtile.config import Key, Screen, Group, Drag
-from libqtile.command import lazy
+try:
+    from libqtile.lazy import lazy
+except ImportError:
+    from libqtile.command import lazy
 from libqtile import layout, bar, widget, hook, pangocffi, utils
 # from libqtile.log_utils import logger
 
