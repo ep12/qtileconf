@@ -14,6 +14,7 @@ from libqtile import layout, bar, widget, hook, pangocffi, utils
 # TODO:
 # Temperature Graph
 # from libqtile.widget.graph import _Graph
+# lazy.simulate_keypress
 
 from util import colorscheme, PwrLine, TermCmd as _TermCmd, on_startup, import_from_file, get_state_alsa
 
@@ -27,6 +28,18 @@ from util import colorscheme, PwrLine, TermCmd as _TermCmd, on_startup, import_f
 hook.subscribe.startup_once(on_startup)  # not fired after restart
 hook.subscribe.screen_change(lambda qtile, anotherarg: qtile.cmd_restart())
 # hook.subscribe.client_new
+
+
+BLOCKS = {1 / 8: '▁', 1 / 4: '▂', 3 / 8: '▃', 1 / 2: '▄',
+          5 / 8: '▅', 3 / 4: '▆', 7 / 8: '▇', 1: '█', 0: '_'}
+
+
+def percentage_to_block(percentage: str):
+    if isinstance(percentage, str):
+        percentage = float(percentage)
+    if percentage > 1:
+        percentage /= 100
+    return max({k: v for k, v in BLOCKS.items() if k <= percentage}.items())[1]
 
 
 class ModifiedKeyboardLayout(widget.KeyboardLayout):
@@ -162,25 +175,37 @@ def get_volume_pulse(*args, **kwargs):
 
 
 def get_volume_alsa(*args, **kwargs):
-    tmp, s = '🔈', ''
-    state = get_state_alsa()
-    channels = state['playback channels']
-    if len(channels) == 1:
-        k = channels[0].lower()
-        ch_state = state[k]
-        if '[on]' in ch_state and '[off]' in ch_state:
-            s = '?'
-        elif '[off]' in ch_state:
-            tmp = '🔇'
+    speaker_icon_normal, speaker_icon_muted = '🔈', '🔇'
+    s = get_state_alsa()
+    channels = list(map(str.lower, s['playback channels']))
+    channel_states = {}
+    for c in channels:
+        cs, md = '?', None
+        state_list = s[c]
+        if '[off]' in state_list:
+            cs = '/' if '[on]' not in state_list else '?'
         else:
-            for x in ch_state:
-                m = re.fullmatch(r'\[(100|\d{2})%\]', x)
+            for x in state_list:
+                m = re.fullmatch(r'\[(100|\d{1,2})%\]', x)
                 if bool(m):
-                    s = m.groups()[0]
+                    md = int(m.groups()[0])
+                    cs = percentage_to_block(md)
                     break
-                else:
-                    s = '?'
-    return tmp + s
+            else:
+                pass  # TODO
+        channel_states[c] = (cs, md)
+    t0 = list(channel_states.values())[0]
+    if all(t == t0 for t in channel_states.values()):
+        print('A')
+        cd, md = t0
+        if cd == '/':
+            return speaker_icon_muted
+        elif cd == '?':
+            return speaker_icon_normal + cd
+        else:
+            return speaker_icon_normal + str(md)
+    else:
+        return speaker_icon_normal + ''.join([channel_states[c][0] for c in channels])
 
 
 hostname = os.uname()[1]
@@ -363,20 +388,26 @@ keys = [
     #   return q.currentWindow.floating
     # NOTE: system
     Key([mod, 'control', 'shift'], 'F4',
-        lazy.spawn('shutdown -h +1')),
+        lazy.spawn('shutdown -h +1'),
+        desc='Shutdown the computer'),
     Key([mod, 'control', 'shift'], 'F5',
-        lazy.spawn('reboot')),
+        lazy.spawn('reboot'),
+        desc='Reboot the computer'),
 
     # NOTE: qtile
-    Key([mod, 'control'], 'F5', lazy.restart()),
-    Key([mod, 'control'], 'F4', lazy.shutdown()),
+    Key([mod, 'control'], 'F5', lazy.restart(), desc='Restart qtile'),
+    Key([mod, 'control'], 'F4', lazy.shutdown(), desc='Kill qtile'),
     Key([mod], 'F1', lazy.spawn(TermCmd(
         'bash -c "cat %r; read -n 10 -rs -p \'Press any key to quit\'"' %
-        (HOME + '/.config/qtile/keybindings.md')))),
+        (HOME + '/.config/qtile/keybindings.md'))),
+        desc='Show keybindings'),
 
     # NOTE: Workspace
     Key([mod, 'control'], 'Left', lazy.screen.prev_group()),
     Key([mod, 'control'], 'Right', lazy.screen.next_group()),
+
+    Key([mod], 'comma', lazy.next_screen(), desc='Focus next screen'),
+    Key([mod], 'period', lazy.prev_screen(), desc='Focus previous screen'),
 
     # NOTE: Layout
     Key([mod_alt], 'Tab', lazy.layout.next()),
@@ -406,13 +437,14 @@ keys = [
     # Unsplit = 1 window displayed, like Max layout, but still with multiple stack panes
     # Key([mod, 'shift'], 'Return', lazy.layout.toggle_split()),
     Key([mod], 'Tab', lazy.next_layout()),
-    #Key([mod, 'shift'], 'Tab', lazy.previous_layout()),
+    Key([mod, 'shift'], 'Tab', lazy.prev_layout()),
 
     # NOTE: window
     Key([mod], 'F11', lazy.window.toggle_fullscreen()),
     Key([mod, 'shift'], 'F11', lazy.window.toggle_floating()),
     # Key([mod], 'F4', lazy.window.kill()),
     Key([mod_alt], 'F4', lazy.window.kill()),
+    Key([mod], 'F4', lazy.spawn('xkill')),
 
     # NOTE: launch
     Key([mod], 't',
@@ -700,6 +732,7 @@ screens = scfg.get('screens', [
                 background=colors('active'),
                 foreground=colors('white'),
                 update_interval=3600,
+                # fontsize=N_BAR_HEIGHT * 0.9,  # N_FONTSIZE_SMALL,
                 markup=True,
             ),
             widget.Battery(
@@ -845,9 +878,9 @@ mouse = scfg.get('mouse', [
 dgroups_key_binder = None
 dgroups_app_rules = []  # type: List
 main = None
-follow_mouse_focus = True
+follow_mouse_focus = False  # True
 bring_front_click = False
-cursor_warp = False # True
+cursor_warp = False  # True  # False
 floating_layout = layout.Floating(
     float_rules=[{'wmclass': 'confirm'},
                  {'wmclass': 'dialog'},

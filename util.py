@@ -42,7 +42,7 @@ def state_snapshot():
     return d
 
 
-def set_volume_alsa(qtile, level: str):
+def set_volume_alsa(qtile, level: str):  # TODO: stereo decoupled settings
     global CHANGED_WITH_OFF
     special_mute = ['mute', 'unmute', 'toggle mute']
     setv = level not in special_mute

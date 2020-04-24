@@ -1,4 +1,7 @@
 #!/bin/bash
+
+echo $(date -R) Running autoexec.sh >>~/.config/qtile/autoexec.log.old
+
 # set the resolution to something more appropriate:
 # xrandr --output Virtual1 --mode 1680x1050
 
@@ -8,15 +11,17 @@ xsetroot -solid "#000000"
 #xrdb -merge /home/simon/.Xresources
 
 # network manager
-nm-applet &
+pgrep nm-applet || nm-applet &
 
 # mft
 #roxterm &
 urxvt &
 
 amixer set Master off
-amixer set Headphone on
-amixer set Speaker on
+amixer -c PCH set Headphone on
+amixer -c PCH set Speaker on
+amixer -c PCH set Capture nocap
+amixer -D pulse set Capture nocap
 
 # redshift night color filter
 redshift -m randr -v -t 6500:4000 -l 52.24:9.66 &
@@ -37,3 +42,5 @@ fi
 #	arandr & echo "";
 #fi
 # TODO: xrandr --listactivemonitors
+
+echo $(date -R) Ran autoexec.sh >>~/.config/qtile/autoexec.log.old
