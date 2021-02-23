@@ -1,0 +1,8 @@
+[ UI ] PulseAudio Mixer (pavucontrol)
+[ UI ] Catia Patchbay (catia)
+[TERM] AlsaMixer BLUE (alsamixer -c 2)
+[TERM] AlsaMixer Internal (alsamixer -c 1)
+[ UI ] Cadence (cadence)
+[ UI ] Non Mixer (non-mixer)
+[ UI ] Non Mixer (non-mixer /home/simon/.config/non-mixer/QuadruMix)
+[ UI ] Claudia LADISH Studio Manager (claudia)

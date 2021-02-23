@@ -2,3 +2,7 @@ __pycache__
 config_*.py
 autoexec.sh
 **.old
+.mypy_cache/
+autoexec.log
+**/flycheck*.py
+home_bssids.list
