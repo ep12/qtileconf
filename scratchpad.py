@@ -3,7 +3,10 @@
 from libqtile.config import Click, Drag, Key, Match, ScratchPad, DropDown
 from libqtile.lazy import lazy
 
-from base_config import mod, mod_alt, HOME
+from base_config import mod, mod_alt, HOME, terminal, terminal_eflag
+
+
+TCMD = f'{terminal} {terminal_eflag}'
 
 scratchpad = ScratchPad('scratchpad', [
     DropDown('files', 'pcmanfm',
@@ -11,21 +14,21 @@ scratchpad = ScratchPad('scratchpad', [
     DropDown('term', 'termite',
              opacity=0.85, x=0.05, y=0.05, width=0.9, height=0.9),
 
-    DropDown('htop', 'termite -e htop',
+    DropDown('htop', f'{TCMD} htop',  # TODO!
              opacity=0.8, x=0.05, y=0.05, width=0.9, height=0.9),
-    DropDown('glances', 'termite -e glances',
+    DropDown('glances', f'{TCMD} glances',  # TODO!
              opacity=0.8, x=0.05, y=0.05, width=0.9, height=0.9),
 
     # DropDown('discord',
     #          'google-chrome-stable --app=https://www.discord.com/app',
     #          opacity=1, x=0, y=0, width=0.999, height=1),
-    DropDown('skype', 'skypeforlinux',
-             opacity=1, x=0, y=0, width=0.999, height=1),
+    # DropDown('skype', 'skypeforlinux',
+    #          opacity=1, x=0, y=0, width=0.999, height=1),
     DropDown('zulip',
              'google-chrome-stable --app=https://physstgrp.zulipchat.com',
              opacity=1, x=0, y=0, width=0.999, height=1),
 
-    DropDown('music', 'termite -e ncmpcpp',
+    DropDown('music', f'{TCMD} ncmpcpp',  # TODO!
              opacity=0.8, x=0.05, y=0.05, width=0.9, height=0.9),
     DropDown('pa-mixer', 'pavucontrol',
              opacity=1, x=0.02, y=0.02, width=0.96, height=0.96),
@@ -37,13 +40,13 @@ scratchpad_bindings = [
     Key([mod], 'd',
         lazy.group['scratchpad'].dropdown_toggle('term')),
 
-    Key([mod, 'shift'], 'Escape',
+    Key(['control', 'shift'], 'Escape',
         lazy.group['scratchpad'].dropdown_toggle('htop')),
-    Key([mod], 'Escape',
+    Key(['control'], 'Escape',
         lazy.group['scratchpad'].dropdown_toggle('glances')),
 
-    Key([mod, 'shift'], 's',
-        lazy.group['scratchpad'].dropdown_toggle('skype')),
+    # Key([mod, 'shift'], 's',
+    #     lazy.group['scratchpad'].dropdown_toggle('skype')),
     Key([mod, 'shift'], 'z',
         lazy.group['scratchpad'].dropdown_toggle('zulip')),
 
