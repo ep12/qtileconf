@@ -7,23 +7,43 @@ from libqtile.lazy import lazy
 from base_config import mod, mod_alt, HOME
 
 from lazy_utils import (ProgramFilter, match_prog, send_key_xdt)
-#, ChordModeFix)
-
-# chord_mode_fix = ChordModeFix()
-# hook.subscribe.enter_chord(chord_mode_fix.enter_callback)
-# hook.subscribe.leave_chord(chord_mode_fix.leave_callback)
 
 xournal_bindings = []
 
 xournalpp_bindings = [
-    # Key([mod, 'shift'], 'x', lazy.function(chord_mode_fix.get_qtile)),
     KeyChord([mod], 'x', [
         KeyChord([], 't', [
-            Key([], 'p',
-                lazy.function(send_key_xdt, 'Control+Shift+P')),
-            Key(['control'], 'g',
-                lazy.function(lambda q: q.ungrab_chord())),
+            Key([], 't', lazy.function(send_key_xdt, 'Ctrl+Shift+P')),  # pen
+            Key([], 'p', lazy.function(send_key_xdt, 'Ctrl+Shift+P')),  # pen
+            Key([], 'e', lazy.function(send_key_xdt, 'Ctrl+Shift+E')),  # er..
+            Key([], 'h', lazy.function(send_key_xdt, 'Ctrl+Shift+H')),  # high
+            Key(['shift'], 't',
+                lazy.function(lambda q: q.cmd_ungrab_chord()),
+                lazy.function(lambda q: q.cmd_ungrab_chord()),
+                lazy.function(send_key_xdt, 'Ctrl+Shift+T')),  # text
+            Key([], 'i', lazy.function(send_key_xdt, 'Ctrl+Shift+I')),  # img
+            Key([], 'x', lazy.function(send_key_xdt, 'Ctrl+Shift+X')),  # TeX
         ]),
+        KeyChord([], 's', [
+            Key([], 's', lazy.function(send_key_xdt, 'Ctrl+Shift+G')),  # free
+            Key([], 'b', lazy.function(send_key_xdt, 'Ctrl+Shift+R')),  # box
+            Key([], 'o', lazy.function(send_key_xdt, 'Ctrl+Shift+O')),  # obj
+            Key([], 'v', lazy.function(send_key_xdt, 'Ctrl+Shift+V')),  # vert
+        ]),
+        KeyChord([], 'r', [
+            Key([], 's', lazy.function(send_key_xdt, 'Ctrl+1')),  # smart
+            Key([], 'r', lazy.function(send_key_xdt, 'Ctrl+2')),  # rectangle
+            Key([], 'c', lazy.function(send_key_xdt, 'Ctrl+3')),  # circle
+            Key([], 'a', lazy.function(send_key_xdt, 'Ctrl+4')),  # arrow
+            Key([], 'x', lazy.function(send_key_xdt, 'Ctrl+5')),  # axis
+            Key([], 'l', lazy.function(send_key_xdt, 'Ctrl+6')),  # line
+        ]),
+        KeyChord([], 'p', [
+            Key([], 'a', lazy.function(send_key_xdt, 'Ctrl+D')),  # page after
+            Key(['control'], 'd',  # delete current page
+                lazy.function(send_key_xdt, 'Ctrl+Delete')),
+        ]),
+        Key([], 'f', lazy.function(send_key_xdt, 'Ctrl+Shift+F')),
         Key(['control'], 'g',
             lazy.function(lambda q: q.ungrab_chord())),
     ], mode='xournalpp'),

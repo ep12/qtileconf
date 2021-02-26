@@ -105,10 +105,13 @@ def get_active_window(qtile=None):
 
 
 def send_key_xsk(qtile, key_combo):
-    subprocess.run(['xsendkey', '-window',
-                    hex(get_active_window(qtile)), key_combo], check=True)
+    w = hex(get_active_window(qtile))
+    logger.info('send_key_xsk: %s @ %s', key_combo, w)
+    subprocess.run(['xsendkey', '-window', w, key_combo], check=True)
 
 
 def send_key_xdt(qtile, key_combo):
-    subprocess.run(['xdotool', 'key', '--window',
-                    hex(get_active_window(qtile)), key_combo], check=True)
+    sleep(0.15)
+    logger.info('send_key_xdt: %s', key_combo)
+    subprocess.run(['xdotool', 'getactivewindow', 'key', key_combo],
+                   check=True)
