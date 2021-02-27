@@ -5,24 +5,33 @@ from libqtile.config import Click, Drag, Key, KeyChord, Match
 from libqtile.lazy import lazy
 
 from base_config import mod, mod_alt, HOME
-
+from macro_scripts import MACRO_HOME
 from lazy_utils import (ProgramFilter, match_prog, send_key_xdt)
 
-xournal_bindings = []
+xournal_bindings = [
+    KeyChord([mod, 'shift'], 'x', [
+        # ...
+    ], mode='xournal'),
+]
 
 xournalpp_bindings = [
     KeyChord([mod], 'x', [
+        Key([mod], 's',
+            lazy.spawn(MACRO_HOME + '/macro_wacom_warp_focus.fish')),
         KeyChord([], 't', [
             Key([], 't', lazy.function(send_key_xdt, 'Ctrl+Shift+P')),  # pen
             Key([], 'p', lazy.function(send_key_xdt, 'Ctrl+Shift+P')),  # pen
             Key([], 'e', lazy.function(send_key_xdt, 'Ctrl+Shift+E')),  # er..
             Key([], 'h', lazy.function(send_key_xdt, 'Ctrl+Shift+H')),  # high
             Key(['shift'], 't',
-                lazy.function(lambda q: q.cmd_ungrab_chord()),
-                lazy.function(lambda q: q.cmd_ungrab_chord()),
+                lazy.function(lambda q: q.cmd_leave_chord_mode()),
                 lazy.function(send_key_xdt, 'Ctrl+Shift+T')),  # text
-            Key([], 'i', lazy.function(send_key_xdt, 'Ctrl+Shift+I')),  # img
-            Key([], 'x', lazy.function(send_key_xdt, 'Ctrl+Shift+X')),  # TeX
+            Key([], 'i',
+                lazy.function(lambda q: q.cmd_leave_chord_mode()),
+                lazy.function(send_key_xdt, 'Ctrl+Shift+I')),  # img
+            Key([], 'x',
+                lazy.function(lambda q: q.cmd_leave_chord_mode()),
+                lazy.function(send_key_xdt, 'Ctrl+Shift+X')),  # TeX
         ]),
         KeyChord([], 's', [
             Key([], 's', lazy.function(send_key_xdt, 'Ctrl+Shift+G')),  # free
