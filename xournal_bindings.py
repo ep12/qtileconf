@@ -24,13 +24,13 @@ xournalpp_bindings = [
             Key([], 'e', lazy.function(send_key_xdt, 'Ctrl+Shift+E')),  # er..
             Key([], 'h', lazy.function(send_key_xdt, 'Ctrl+Shift+H')),  # high
             Key(['shift'], 't',
-                lazy.function(lambda q: q.cmd_leave_chord_mode()),
+                lazy.ungrab_all_chords(),
                 lazy.function(send_key_xdt, 'Ctrl+Shift+T')),  # text
             Key([], 'i',
-                lazy.function(lambda q: q.cmd_leave_chord_mode()),
+                lazy.ungrab_all_chords(),
                 lazy.function(send_key_xdt, 'Ctrl+Shift+I')),  # img
             Key([], 'x',
-                lazy.function(lambda q: q.cmd_leave_chord_mode()),
+                lazy.ungrab_all_chords(),
                 lazy.function(send_key_xdt, 'Ctrl+Shift+X')),  # TeX
         ]),
         KeyChord([], 's', [
@@ -53,7 +53,6 @@ xournalpp_bindings = [
                 lazy.function(send_key_xdt, 'Ctrl+Delete')),
         ]),
         Key([], 'f', lazy.function(send_key_xdt, 'Ctrl+Shift+F')),
-        Key(['control'], 'g',
-            lazy.function(lambda q: q.ungrab_chord())),
+        Key(['control'], 'g', lazy.ungrab_chord()),
     ], mode='xournalpp'),
 ]
