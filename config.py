@@ -25,6 +25,8 @@ groups = [
 ]
 
 for i in group_chars:
+    if not i.isdigit():
+        continue
     keys.extend([
         Key([mod, 'control'], i, lazy.group[i].toscreen(),
             desc=f'Switch to group {i}'),

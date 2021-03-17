@@ -10,7 +10,7 @@ TCMD = f'{terminal} {terminal_eflag}'
 
 scratchpad = ScratchPad('scratchpad', [
     DropDown('files', 'pcmanfm',
-             opacity=1, x=0, y=0, width=0.999, height=1),
+             opacity=1, x=0.025, y=0.025, width=0.95, height=0.95),
     DropDown('term', 'termite',
              opacity=0.85, x=0.05, y=0.05, width=0.9, height=0.9),
 
