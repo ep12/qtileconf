@@ -2,6 +2,18 @@
 import os
 HOME = os.environ.get('HOME', os.path.expanduser('~'))
 
+# this might be useful with lazy.something().when(layouts: set[str])
+# import that in keys.py etc. if necessary, keep up to date with layouts.py
+CONFIGURED_LAYOUTS = {
+    'tile',
+    'monadtall',
+    'monadwide',
+    # 'bsp',
+    'matrix2',
+    'matrix3',
+    'treetab',
+}
+
 mod = 'mod4'
 mod_alt = 'mod1'
 terminal = 'termite'
