@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
-from libqtile.config import Click, Drag, Key, Match
+# noqa: F401
+from libqtile.config import Click, Drag, Key, KeyChord, Match
 from libqtile.lazy import lazy
 
 from base_config import (mod, mod_alt, HOME, browser,
@@ -32,13 +33,32 @@ system_keys = [
 ]
 
 qtile_keys = [
+    # Obscure actions we don't need a short keybinding for
+    # Waiting for the name argument to be implemented...
+    KeyChord([mod], 'q', [
+        KeyChord([], 's', [
+            Key([], 'r', lazy.restart(), desc='Restart qtile'),
+            Key(['control'], 'q', lazy.shutdown(), desc='Kill qtile')
+        ], mode='qtile.session'),
+        KeyChord([], 'l', [
+            Key([], 'plus', lazy.layout.increase_nmaster().when('tile')),
+            Key([], 'minus', lazy.layout.decrease_nmaster().when('tile')),
+            Key([], 'r', lazy.layout.rotate()),
+            Key([], 'Return',
+                lazy.layout.maximize(), lazy.ungrab_all_chords()),
+            Key(['shift'], 'Return',
+                lazy.layout.normalize(), lazy.ungrab_all_chords()),
+            KeyChord([], 't', [
+                Key([], 's', lazy.layout.toggle_split()),
+            ]),
+        ], mode='qtile.layout'),
+        # Key([mod], 'F1', lazy.spawn(TermCmd(
+        # 'bash -c "cat %r; read -n 10 -rs -p \'Press any key to quit\'"' %
+        # (HOME + '/.config/qtile/keybindings.md'))),
+        # desc='Show keybindings'),
+    ], mode='qtile'),
     # NOTE: Session
     Key([mod, 'control'], 'F5', lazy.restart(), desc='Restart qtile'),
-    Key([mod, 'control'], 'F4', lazy.shutdown(), desc='Kill qtile'),
-    # Key([mod], 'F1', lazy.spawn(TermCmd(
-    #     'bash -c "cat %r; read -n 10 -rs -p \'Press any key to quit\'"' %
-    #     (HOME + '/.config/qtile/keybindings.md'))),
-    #     desc='Show keybindings'),
 
     # NOTE: Screen
     Key([mod], 'comma', lazy.next_screen(), desc='Focus next screen'),
@@ -57,8 +77,8 @@ qtile_keys = [
     Key([mod], 'Right', lazy.layout.right()),
     Key([mod, 'control'], 'Down', lazy.layout.section_down().when('treetab')),
     Key([mod, 'control'], 'Up', lazy.layout.section_up().when('treetab')),
-    #Key([mod, 'control'], 'Left', lazy.layout.move_left().when('treetab')),
-    #Key([mod, 'control'], 'Right', lazy.layout.move_right().when('treetab')),
+    # Key([mod, 'control'], 'Left', lazy.layout.move_left().when('treetab')),
+    # Key([mod, 'control'], 'Right', lazy.layout.move_right().when('treetab')),
     Key([mod], 'less', lazy.layout.flip()),
     Key([mod, 'shift'], 'Down',
         lazy.layout.shuffle_down(),
@@ -68,22 +88,19 @@ qtile_keys = [
         lazy.layout.move_up().when('treetab')),
     Key([mod, 'shift'], 'Left', lazy.layout.swap_left()),
     Key([mod, 'shift'], 'Right', lazy.layout.swap_right()),
-    Key([mod, 'shift'], 'KP_Insert', lazy.layout.rotate()),
-    Key([mod], 'plus', lazy.layout.grow()),
-    Key([mod], 'minus', lazy.layout.shrink()),
-    Key([mod], 'Return', lazy.layout.maximize()),
-    Key([mod, 'shift'], 'Return', lazy.layout.normalize()),
-    # Toggle between split and unsplit sides of stack:
-    # Split = all windows displayed
-    # Unsplit = 1 window displayed, like Max layout, but with multiple panes
-    # Key([mod, 'shift'], 'Return', lazy.layout.toggle_split()),
+    Key([mod], 'plus',
+        lazy.layout.grow(),
+        lazy.layout.increase_ratio().when('tile')),
+    Key([mod], 'minus',
+        lazy.layout.shrink(),
+        lazy.layout.decrease_ratio().when('tile')),
     Key([mod], 'Tab', lazy.next_layout()),
     Key([mod, 'shift'], 'Tab', lazy.prev_layout()),
 
     # NOTE: window
     Key([mod], 'F11', lazy.window.toggle_fullscreen()),
     Key([mod, 'shift'], 'F11', lazy.window.toggle_floating()),
-    Key([mod], 'period', lazy.window.toggle_minimize()),  # .
+    Key([mod], 'period', lazy.window.toggle_minimize()),
     Key([mod], 'numbersign', lazy.window.toggle_maximize()),  # #
     Key([mod, 'control'], 'numbersign', lazy.group.unminimize_all()),
     # Key([mod], 'F4', lazy.window.kill()),
