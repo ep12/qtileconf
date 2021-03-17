@@ -6,25 +6,12 @@ from libqtile.lazy import lazy
 from base_config import (mod, mod_alt, HOME, browser,
                          terminal, terminal_eflag)
 
-from lazy_utils import prompt_and_run, tick_widget
+from lazy_utils import tick_widget  # , prompt_and_run
 
 from scratchpad import scratchpad_bindings  # dropdown etc.
 from macro_scripts import rofi_script_bindings, tool_bindings
 from launch_bindings import launch_bindings
 from xournal_bindings import xournal_bindings, xournalpp_bindings
-
-
-def goto_group(qtile):
-    def wrapped(dest_group):
-        qtile.groups_map[dest_group].cmd_toscreen()
-    return wrapped
-
-
-def move_to_group(qtile):
-    def wrapped(dest_group):
-        qtile.current_window.togroup(dest_group)
-    return wrapped
-
 
 system_keys = [
     # Key([mod, 'control', 'shift'], 'F4',
@@ -103,8 +90,8 @@ qtile_keys = [
     Key([mod_alt], 'F4', lazy.window.kill()),
 
     # NOTE: fancy goto prompt:
-    Key([mod], 'g', prompt_and_run('g: ', goto_group, 'group')),
-    Key([mod, 'shift'], 'g', prompt_and_run('m: ', move_to_group, 'group')),
+    Key([mod], 'g', lazy.switchgroup(prompt='g')),
+    Key([mod, 'shift'], 'g', lazy.togroup(prompt='g>'))
 ]
 
 basic_launch_keys = [
