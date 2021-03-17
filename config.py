@@ -10,7 +10,7 @@ from libqtile.utils import guess_terminal, logger
 from base_config import (mod, terminal, dgroups_key_binder, dgroups_app_rules,
                          follow_mouse_focus, bring_front_click, cursor_warp,
                          auto_fullscreen, focus_on_window_activation, wmname,
-                         group_chars)
+                         group_chars, reconfigure_screens)
 from scratchpad import scratchpad
 from keys import keys
 
