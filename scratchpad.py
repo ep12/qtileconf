@@ -14,7 +14,7 @@ scratchpad = ScratchPad('scratchpad', [
     DropDown('term', 'termite',
              opacity=0.85, x=0.05, y=0.05, width=0.9, height=0.9),
 
-    DropDown('htop', f'{TCMD} htop',  # TODO!
+    DropDown('htop', f'{TCMD} stupid-test',  # TODO!
              opacity=0.8, x=0.05, y=0.05, width=0.9, height=0.9),
     DropDown('glances', f'{TCMD} glances',  # TODO!
              opacity=0.8, x=0.05, y=0.05, width=0.9, height=0.9),

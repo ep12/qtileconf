@@ -8,6 +8,7 @@ from base_config import (mod, mod_alt, HOME, browser,
                          terminal, terminal_eflag)
 
 from lazy_utils import tick_widget  # , prompt_and_run
+from theme import theme_factory
 
 from scratchpad import scratchpad_bindings  # dropdown etc.
 from macro_scripts import rofi_script_bindings, tool_bindings
@@ -52,6 +53,14 @@ qtile_keys = [
                 Key([], 's', lazy.layout.toggle_split()),
             ]),
         ], mode='qtile.layout'),
+        KeyChord([], 't', [
+            Key([], 's',
+                lazy.function(theme_factory.select_theme_interactively),
+                lazy.ungrab_all_chords()),
+            Key([], 't',
+                lazy.function(theme_factory.switch_light),
+                lazy.ungrab_all_chords()),
+        ], mode='qtile.theme'),
         # Key([mod], 'F1', lazy.spawn(TermCmd(
         # 'bash -c "cat %r; read -n 10 -rs -p \'Press any key to quit\'"' %
         # (HOME + '/.config/qtile/keybindings.md'))),
