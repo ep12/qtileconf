@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 from __future__ import annotations
 import colorsys
+from itertools import starmap
 import json
 import os
 import re
@@ -8,8 +9,24 @@ import subprocess
 import typing as T
 
 from libqtile import hook, widget, qtile
-from libqtile.lazy import lazy
 from libqtile.utils import logger
+
+try:
+    from watchdog.observers import Observer  # type: ignore
+    from watchdog.events import FileSystemEventHandler  # type: ignore
+    WATCHDOG = True  # XXX: cairo out of mem error?
+
+    class WalFSEHandler(FileSystemEventHandler):
+        """File system event handler for (py)?wal."""
+        def __init__(self, factory: 'WalThemeFactory'):
+            self.factory = factory
+
+        def on_modified(self, event):
+            self.factory.reload_theme()
+
+        on_created = on_modified
+except ImportError:
+    WATCHDOG = False
 
 PWRLINE_DEFAULT_SIZE = 16
 _PWRLINECHARS = {
@@ -151,6 +168,7 @@ NAMED_COLORS = {
 
 
 class Color:
+    """Represent a color as a tuple of r, g and b coordinates."""
     def __init__(self, spec: T.Union[T.Tuple[float, float, float], str]):
         r, g, b = 0., 0., 0.
         if isinstance(spec, tuple):
@@ -209,12 +227,33 @@ class Color:
                                            max(min_s, min(max_s, s or s2)),
                                            max(min_v, min(max_v, v or v2))))
 
+    def rgb_dist(self, other: Color) -> float:
+        return sum(starmap(lambda x, y: (x - y) ** 2, zip(self.t, other.t)))
+
+    def h_dist(self, other: Color) -> float:
+        return abs(other.hsv[0] - self.hsv[0])
+
+    def s_dist(self, other: Color) -> float:
+        return abs(other.hsv[1] - self.hsv[1])
+
+    def v_dist(self, other: Color) -> float:
+        return abs(other.hsv[2] - self.hsv[2])
+
+    def contrast_enforce(self, other: Color, v_contrast: float) -> Color:
+        v, other_v = self.hsv[2], other.hsv[2]
+        if abs(v - other_v) >= v_contrast:
+            return self
+        # Not ideal:
+        new_v = min(1, other_v + v_contrast) if v > other_v else max(0, other_v - v_contrast)
+        return self.set_hsv_coord(v=new_v)
+
 
 DEF_VAL_TYPE = T.Union[str, T.Callable[['WalThemeFactory'], Color]]
 DEF_TYPE = T.Dict[str, DEF_VAL_TYPE]
 
 
 class WalThemeFactory:
+    """Generate a theme on-the-fly using the selected (py)?wal colorscheme."""
     def __init__(self, default_theme_name: str,
                  cache_folder: str = os.path.expanduser('~/.cache/wal')):
         assert re.match(r'^(light|dark)/', default_theme_name)
@@ -225,9 +264,25 @@ class WalThemeFactory:
         self.definitions_dark: DEF_TYPE = {}
         self.definitions_light: DEF_TYPE = {}
         self.load_json()
-        if self['background'].hsv[2] > 0.3:  # TODO
-            self.theme = 'light/' + self.theme.split('/', 1)[1]
         hook.subscribe.startup_complete(self.apply_theme)
+        self.observer: T.Optional[Observer] = None
+        if WATCHDOG:  # THIS CAUSES AN ERROR: CAIRO_STATUS_NO_MEMORY
+            self.observer = Observer()
+            self.observer.schedule(WalFSEHandler(self), path=cache_folder, recursive=True)
+            self.observer.start()
+
+    def __del__(self):
+        if self.observer is not None:
+            self.observer.stop()
+            self.observer.join()
+
+    def load_theme_name(self) -> str:
+        try:
+            with open(os.path.join(self.cache_folder, 'theme.name')) as f:
+                self.theme = f.read()
+        except Exception as e:
+            logger.error('Failed to load theme name: %r', e)
+        return self.theme
 
     def __getitem__(self, item: str):
         if item in {'foreground', 'background', 'cursor'}:
@@ -269,23 +324,18 @@ class WalThemeFactory:
         cmd = [os.path.expanduser('~/.config/qtile/rofi-scripts/wal-select.fish')]
         if name is not None:
             cmd.append(name)
-        logger.info('RUNNING %r', cmd)
-        output = subprocess.check_output(cmd).strip()
-        if b'\n' not in output:
-            logger.error('select_theme: wal-select returned an unusual result:\n%s', output)
-            return
-        name = output.rsplit(b'\n', 1)[1].strip().decode()  # ignore terminal escape sequences
-        logger.info('select_theme: %r', name)
-        if name == 'keep':
-            return
-        if not re.match('^(light|dark)/', name):
-            logger.error('wal-select returned an unusual result %s', name)
-            return
-        self.theme = name
+        try:
+            subprocess.run(cmd, check=True, capture_output=True)
+        except subprocess.CalledProcessError as e:
+            logger.error('Failed to run %r ~> %d:\n%r\n%r', cmd, e.returncode, e.stdout, e.stderr)
+        self.reload_theme()
+
+    def reload_theme(self):
         self.load_json()
         self.apply_theme()
 
     def load_json(self):
+        self.load_theme_name()
         with open(os.path.join(self.cache_folder, 'colors.json')) as f:
             d = json.load(f)
         if not set(d).issuperset({'colors', 'special', 'wallpaper', 'alpha'}):
@@ -307,11 +357,10 @@ class WalThemeFactory:
                     self.tdata['colors'][k] = self.run_definition(v, raise_exception=True)
                     del definitions[k]
                 except KeyError:
-                    logger.debug('Postponed definition: %r, %r', k, v)
+                    pass
             if s == len(definitions):
                 logger.error('cyclic definition dependency detected: %r', definitions)
                 break
-        logger.info('Ran definitions: %r', self.tdata)
 
     def run_definition(self, definition: DEF_VAL_TYPE, *, raise_exception: bool = False) -> Color:
         if callable(definition):
@@ -320,7 +369,6 @@ class WalThemeFactory:
             try:
                 return self[definition]
             except KeyError:
-                logger.warning('theme application failed: self[%r] ~> KeyError', definition)
                 if raise_exception:
                     raise KeyError(definition) from None
         if isinstance(definition, Color):
@@ -330,41 +378,49 @@ class WalThemeFactory:
 
     def apply_theme(self):  # qtile
         self.run_definitions()
-        logger.debug('Screens: %s', qtile.screens)
         for screen in qtile.screens:
             for pos in ('top', 'bottom', 'left', 'right'):
                 bar = getattr(screen, pos, None)
                 if bar is not None:
                     self.apply_theme_to_bar(bar)
+        for g in qtile.groups_map.values():
+            self.apply_theme_to_group(g)
+        self.apply_theme_to_element(qtile.config.floating_layout)
+        # TODO: maybe flash a qtile popup to force systray icons to be redrawn?
 
     def apply_theme_to_bar(self, bar):
-        logger.debug('apply_theme_to_bar(%r)', bar)
         self.apply_theme_to_element(bar)
         for widget in bar.widgets:
             self.apply_theme_to_element(widget)
         bar.draw()
+
+    def apply_theme_to_group(self, group):
+        for layout in group.layouts:
+            self.apply_theme_to_element(layout)
+        group.layout = group.layout.name  # trigger redraw.
 
     def apply_theme_to_element(self, element):
         # pylint: disable=protected-access
         if '_t_factory' not in element._user_config:
             return
         spec = element._user_config['_t_factory']
-        logger.debug('Element has a factory: %r', element)
         if spec is None:
-            logger.error('spec is None: %r\n%r', element, element._user_config)
             return
         for prop, gen in spec.items():
             v = self.run_definition(gen).s
             if len(v) not in (6, 8):
                 logger.error('malformed color for %r, %r: %r ~> %r', element, prop, gen, v)
                 continue
-            # logger.debug('setattr(%r, %r, %r)', element, prop, v)
             setattr(element, prop, v)
+        if isinstance(element, widget.Systray):
+            element.draw()
 
 
 theme_factory = WalThemeFactory('dark/google')
 theme_factory.update_definitions({  # light:
-    'Active': lambda s: s['orange'].set_hsv_coord(min_v=0.8, max_s=0.5),
+    'Active': lambda s: (s['orange']
+                         .set_hsv_coord(min_v=0.8, max_s=0.5)
+                         .contrast_enforce(s['Text.bold'], 0.5)),
     'Alert.bold': lambda s: s['b red'].set_hsv_coord(min_v=0.9, min_s=0.5),
     'Alert.dim': lambda s: s['b red'].set_hsv_coord(min_v=0.4, max_v=0.6),
     'Text.bold': lambda s: s['white'].set_hsv_coord(max_v=0.1),
@@ -377,9 +433,14 @@ theme_factory.update_definitions({  # light:
     'KBLayout.bg': 'Trailer.fg',
     'KBLayout.fg': 'Trailer.bg',
     'Trailer.fg': lambda s: s['white'].set_hsv_coord(v=1, max_s=0.1),
-    'Trailer.bg': lambda s: s['cyan'].set_hsv_coord(min_s=0.7, max_v=0.7),
-}, { # dark:
-    'Active': lambda s: s['b cyan'].set_hsv_coord(min_v=0.4, min_s=0.6),
+    'Trailer.bg_alt': lambda s: s['cyan'].set_hsv_coord(min_s=0.7, max_v=0.7),
+    'Trailer.bg': lambda s: (s['Active'] if (s['Active'].h_dist(s['Trailer.bg_alt']) < 0.1
+                                             and s['Active'].s_dist(s['Trailer.bg_alt']) < 0.1)
+                             else s['Trailer.bg_alt']),
+}, {  # dark:
+    'Active': lambda s: (s['b cyan']
+                         .set_hsv_coord(min_v=0.4, min_s=0.6)
+                         .contrast_enforce(s['Text.bold'], 0.5)),
     'Alert.bold': lambda s: s['b red'].set_hsv_coord(min_v=0.9, min_s=0.5),
     'Alert.dim': lambda s: s['b red'].set_hsv_coord(v=0.4),
     'Text.bold': lambda s: s['white'].set_hsv_coord(v=1, max_s=0.1),
@@ -391,6 +452,9 @@ theme_factory.update_definitions({  # light:
     'Systray.bg': lambda s: s['dim gray'].set_hsv_coord(max_v=0.3),
     'KBLayout.bg': 'Trailer.fg',
     'KBLayout.fg': 'Trailer.bg',
-    'Trailer.bg': lambda s: s['b cyan'].set_hsv_coord(min_s=0.8),
-    'Trailer.fg': lambda s: s['white'].set_hsv_coord(min_v=0.8),
+    'Trailer.fg': lambda s: s['white'].set_hsv_coord(min_v=0.95),
+    'Trailer.bg_alt': lambda s: s['b cyan'].set_hsv_coord(min_s=0.8, max_v=0.6),
+    'Trailer.bg': lambda s: (s['Active'] if (s['Active'].h_dist(s['Trailer.bg_alt']) < 0.1
+                                             and s['Active'].s_dist(s['Trailer.bg_alt']) < 0.1)
+                             else s['Trailer.bg_alt']),
 })

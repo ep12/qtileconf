@@ -12,6 +12,12 @@ Summary:
 
 # Screenshots
 
+## Theme
+
+Recently introduced feature: load (py)?wal color themes on the fly:
+
+![various color schemes for the bar](images/themed_bar.png)
+
 ## Demo windows
 
 ![Desktop with some programs](images/desktop-demo.png)  

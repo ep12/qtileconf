@@ -14,11 +14,13 @@ else
         echo $c
     end | rofi -p 'Theme' -dmenu $rofi_args 2>/dev/null)
     if test -z "$selection"
-        echo -n "\nkeep"
         exit 0
     end
 end
 set theme (echo $selection | sed 's:^(light|dark)/::g')
 set light (echo $selection | grep -Pq '^light/'; and echo '-l')
-wal -q --theme $theme $light
-echo -e "\n$selection" # we need this in qtile
+wal -q --theme $theme $light >/tmp/wal.log
+if test (jq -r '.wallpaper' ~/.cache/wal/colors.json) = None
+    xsetroot -solid (jq -r '.special["background"]' ~/.cache/wal/colors.json)
+end
+echo -n "$selection" > ~/.cache/wal/theme.name # we need this in qtile

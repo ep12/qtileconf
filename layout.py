@@ -19,15 +19,14 @@ widget_defaults = {
     'padding': 4,
 }
 extension_defaults = widget_defaults.copy()
-window_defaults = {  # non-standard
-    'border_focus': colors('active'),
-    'border_normal': colors('inactive'),
+window_defaults = {
     'border_width': 1,
+    '_t_factory': {'border_focus': 'Active', 'border_normal': 'Bar.bg'},
 }
 
 layouts = [
-    layout.MonadTall(ratio=0.5, min_ratio=0.05, max_ratio=0.95,
-                     change_ratio=0.02, change_size=10, **window_defaults),
+    layout.MonadTall(ratio=0.5, min_ratio=0.05, max_ratio=0.95, change_ratio=0.02, change_size=10,
+                     **window_defaults),
     layout.MonadWide(ratio=0.5, min_ratio=0.05, max_ratio=0.95,
                      change_ratio=0.02, change_size=10, **window_defaults),
     layout.Tile(add_after_last=True, ratio=0.55, ratio_increment=0.02,
@@ -36,20 +35,14 @@ layouts = [
     #            **window_defaults),
     layout.Matrix(columns=2, margin=0, name='matrix2', **window_defaults),
     layout.Matrix(columns=3, margin=0, name='matrix3', **window_defaults),
-    layout.TreeTab(active_bg=colors('active'),
-                   active_fg=colors('barbackground'),
-                   inactive_bg=colors('barbackground'),
-                   inactive_fg=colors('white'),
-                   section_fg=colors('active'),
-                   bg_color=colors('barbackground'),
-                   section_fontsize=widget_defaults['fontsize'],
-                   fontsize=widget_defaults['fontsize'],
-                   level_shift=4, margin_left=4, margin_y=4,
-                   padding_left=4, padding_x=4, padding_y=2,
-                   panel_width=250, previous_on_rm=True,
-                   section_bottom=4, section_left=4, section_padding=4,
-                   section_top=4, section=['Default'],
-                   vpace=2, **window_defaults),
+    layout.TreeTab(level_shift=4, panel_width=250, section_fontsize=widget_defaults['fontsize'],
+                   fontsize=widget_defaults['fontsize'], previous_on_rm=True, section=['Default'],
+                   border_width=window_defaults.get('border_width', 1), margin_left=4, margin_y=4,
+                   padding_left=4, padding_x=4, padding_y=2, vspace=2,
+                   section_bottom=4, section_left=4, section_padding=4, section_top=4,
+                   _t_factory={'active_bg': 'Active', 'active_fg': 'Text.bold',
+                               'inactive_bg': 'Bar.bg', 'inactive_fg': 'Text.bold',
+                               'section_fg': 'Text.bold', 'bg_color': 'Bar.bg'}),
 ]
 floating_layout = layout.Floating(
     float_rules=[
