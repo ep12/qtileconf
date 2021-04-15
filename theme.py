@@ -14,7 +14,7 @@ from libqtile.utils import logger
 try:
     from watchdog.observers import Observer  # type: ignore
     from watchdog.events import FileSystemEventHandler  # type: ignore
-    WATCHDOG = True  # XXX: cairo out of mem error?
+    WATCHDOG = False  # XXX: cairo out of mem error?
 
     class WalFSEHandler(FileSystemEventHandler):
         """File system event handler for (py)?wal."""
@@ -424,9 +424,11 @@ theme_factory.update_definitions({  # light:
     'Alert.bold': lambda s: s['b red'].set_hsv_coord(min_v=0.9, min_s=0.5),
     'Alert.dim': lambda s: s['b red'].set_hsv_coord(min_v=0.4, max_v=0.6),
     'Text.bold': lambda s: s['white'].set_hsv_coord(max_v=0.1),
+    'Text.bold.i': lambda s: s['black'].set_hsv_coord(min_v=0.9, max_s=0.1),
     'Text.gray': lambda s: s['white'].set_hsv_coord(min_v=0.4, max_v=0.6),
     'Bar.bg': lambda s: s['background'].set_hsv_coord(min_v=0.9),
-    'GroupBox.bg': lambda s: s['blue'].set_hsv_coord(min_v=0.9, max_s=0.3),
+    'GroupBox.bg': lambda s: (c if ((c := s['blue'].set_hsv_coord(min_v=0.9, max_s=0.3))
+                                    .h_dist(s['background']) > 0.1) else s['background']),
     'GroupBox.csb': 'Active',
     'GroupBox.sb': lambda s: s['Active'].set_hsv_coord(min_v=0.7, max_s=0.2),
     'Systray.bg': lambda s: s['gray'],
@@ -444,9 +446,11 @@ theme_factory.update_definitions({  # light:
     'Alert.bold': lambda s: s['b red'].set_hsv_coord(min_v=0.9, min_s=0.5),
     'Alert.dim': lambda s: s['b red'].set_hsv_coord(v=0.4),
     'Text.bold': lambda s: s['white'].set_hsv_coord(v=1, max_s=0.1),
+    'Text.bold.i': lambda s: s['black'].set_hsv_coord(max_v=0.1, max_s=0.1),
     'Text.gray': lambda s: s['white'].set_hsv_coord(max_v=0.6, max_s=0.1),
     'Bar.bg': lambda s: s['background'].set_hsv_coord(max_v=0.1),
-    'GroupBox.bg': lambda s: s['b blue'].set_hsv_coord(max_v=0.3),
+    'GroupBox.bg': lambda s: (c if ((c := s['b blue'].set_hsv_coord(max_v=0.3))
+                                    .h_dist(s['background']) > 0.1) else s['background']),
     'GroupBox.csb': 'Active',
     'GroupBox.sb': lambda s: s['Active'].set_hsv_coord(v=0.4, max_s=0.2),
     'Systray.bg': lambda s: s['dim gray'].set_hsv_coord(max_v=0.3),

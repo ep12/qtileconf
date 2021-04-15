@@ -140,6 +140,10 @@ if test -n "$bluemic" -o -n "$home_monitor" -o -n "$home_inet"
         end
     end
 end
+wal -R
+if test (jq -r '.wallpaper' ~/.cache/wal/colors.json) = None
+    xsetroot -solid (jq -r '.special["background"]' ~/.cache/wal/colors.json)
+end
 
 log "Reached end of autoexec.fish"
 log "Bye"

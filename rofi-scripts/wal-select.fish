@@ -19,7 +19,7 @@ else
 end
 set theme (echo $selection | sed 's:^(light|dark)/::g')
 set light (echo $selection | grep -Pq '^light/'; and echo '-l')
-wal -q --theme $theme $light >/tmp/wal.log
+wal -q --theme $theme $light
 if test (jq -r '.wallpaper' ~/.cache/wal/colors.json) = None
     xsetroot -solid (jq -r '.special["background"]' ~/.cache/wal/colors.json)
 end
