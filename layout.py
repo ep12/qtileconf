@@ -60,7 +60,48 @@ floating_layout = layout.Floating(
 )
 
 
+def top_bar(main=False):
+    b = bar.Bar([
+        *([
+            w.CPUGraph(**GRAPH_OPTS,
+                   _t_factory={'background': 'CPU.bg', 'border_color': 'CPU.bg',
+                               'graph_color': 'CPU', 'fill_color': 'CPU.f'}),
+            PwrLine(fontsize=N_BAR_HEIGHT,
+                _t_factory={'left_color': 'CPU.bg', 'right_color': 'MEM.bg'}),
+            w.MemoryGraph(**GRAPH_OPTS,
+                          _t_factory={'background': 'MEM.bg', 'border_color': 'MEM.bg',
+                                      'graph_color': 'MEM', 'fill_color': 'MEM.f'}),
+            PwrLine(fontsize=N_BAR_HEIGHT,
+                _t_factory={'left_color': 'MEM.bg', 'right_color': 'Bar.bg'}),
+            w.Wttr(location={'': ''}, format='%t %w\n%c%C', fontsize=11,
+                   _t_factory={'background': 'Bar.bg', 'foreground': 'Text.bold'}),
+        ] if main else []),
+        PwrLine(fontsize=N_BAR_HEIGHT,
+                _t_factory={'left_color': 'Bar.bg', 'right_color': 'GroupBox.bg'}),
+        w.WindowName(fmt=' {}',
+                     _t_factory={'foreground': 'Text.bold', 'background': 'GroupBox.bg'}),
+        PwrLine(rtl=True, fontsize=N_BAR_HEIGHT,
+                _t_factory={'right_color': 'Bar.bg', 'left_color': 'GroupBox.bg'}),
+        *([
+            w.Wttr(location={'': ''}, format='%m%M\n%z', fontsize=11,
+                   _t_factory={'background': 'Bar.bg', 'foreground': 'Text.bold'}),
+            PwrLine(rtl=True, fontsize=N_BAR_HEIGHT,
+                _t_factory={'right_color': 'IUP.bg', 'left_color': 'Bar.bg'}),
+            w.NetGraph(**GRAPH_OPTS, bandwidth_type='up',
+                       _t_factory={'background': 'IUP.bg', 'border_color': 'IUP.bg',
+                                   'graph_color': 'IUP', 'fill_color': 'IUP.f'}),
+            PwrLine(rtl=True, fontsize=N_BAR_HEIGHT,
+                _t_factory={'left_color': 'IUP.bg', 'right_color': 'IDOWN.bg'}),
+            w.NetGraph(**GRAPH_OPTS, bandwidth_type='down',
+                       _t_factory={'background': 'IDOWN.bg', 'border_color': 'IDOWN.bg',
+                                   'graph_color': 'IDOWN', 'fill_color': 'IDOWN.f'}),
+        ] if main else [])
+    ], N_BAR_HEIGHT, _t_factory={'background': 'Bar.bg'})
+    return b
+
+
 screen_0 = Screen(
+    top=top_bar(main=True),
     bottom=bar.Bar([
         w.GroupBox(name='main_group_box', rounded=False, highlight_method='block',
                    urgent_method='block', margin=0, padding=6, borderwidth=1,

@@ -439,6 +439,18 @@ theme_factory.update_definitions({  # light:
     'Trailer.bg': lambda s: (s['Active'] if (s['Active'].h_dist(s['Trailer.bg_alt']) < 0.1
                                              and s['Active'].s_dist(s['Trailer.bg_alt']) < 0.1)
                              else s['Trailer.bg_alt']),
+    'CPU': lambda s: s['b red'].set_hsv_coord(min_s=0.5),
+    'CPU.f': lambda s: s['CPU'].set_hsv_coord(min_v=0.7, max_s=0.6),
+    'CPU.bg': lambda s: s['CPU'].set_hsv_coord(min_v=0.9, max_s=0.3),
+    'MEM': lambda s: s['b green'].set_hsv_coord(min_s=0.5),
+    'MEM.f': lambda s: s['MEM'].set_hsv_coord(min_v=0.7, max_s=0.6),
+    'MEM.bg': lambda s: s['MEM'].set_hsv_coord(min_v=0.9, max_s=0.3),
+    'IUP': lambda s: s['yellow'].set_hsv_coord(min_s=0.5),
+    'IUP.f': lambda s: s['IUP'].set_hsv_coord(min_v=0.7, max_s=0.6),
+    'IUP.bg': lambda s: s['IUP'].set_hsv_coord(min_v=0.9, max_s=0.3),
+    'IDOWN': lambda s: s['b magenta'].set_hsv_coord(min_s=0.5),
+    'IDOWN.f': lambda s: s['IDOWN'].set_hsv_coord(min_v=0.7, max_s=0.6),
+    'IDOWN.bg': lambda s: s['IDOWN'].set_hsv_coord(min_v=0.9, max_s=0.3),
 }, {  # dark:
     'Active': lambda s: (s['b cyan']
                          .set_hsv_coord(min_v=0.4, min_s=0.6)
@@ -461,4 +473,16 @@ theme_factory.update_definitions({  # light:
     'Trailer.bg': lambda s: (s['Active'] if (s['Active'].h_dist(s['Trailer.bg_alt']) < 0.1
                                              and s['Active'].s_dist(s['Trailer.bg_alt']) < 0.1)
                              else s['Trailer.bg_alt']),
+    'CPU': lambda s: s['b red'].set_hsv_coord(min_v=0.5, min_s=0.8),
+    'CPU.f': lambda s: s['CPU'].set_hsv_coord(min_v=0.2, max_s=0.8),
+    'CPU.bg': lambda s: s['CPU'].set_hsv_coord(max_v=0.2, min_s=0.2, max_s=0.7),
+    'MEM': lambda s: s['b green'].set_hsv_coord(min_v=0.5, min_s=0.8),
+    'MEM.f': lambda s: s['MEM'].set_hsv_coord(min_v=0.2, max_s=0.8),
+    'MEM.bg': lambda s: s['MEM'].set_hsv_coord(max_v=0.2, min_s=0.2, max_s=0.7),
+    'IUP': lambda s: s['yellow'].set_hsv_coord(min_v=0.5, min_s=0.8),
+    'IUP.f': lambda s: s['IUP'].set_hsv_coord(min_v=0.2, max_s=0.8),
+    'IUP.bg': lambda s: s['IUP'].set_hsv_coord(max_v=0.2, min_s=0.2, max_s=0.7),
+    'IDOWN': lambda s: s['b magenta'].set_hsv_coord(min_v=0.5, min_s=0.8),
+    'IDOWN.f': lambda s: s['IDOWN'].set_hsv_coord(min_v=0.2, max_s=0.8),
+    'IDOWN.bg': lambda s: s['IDOWN'].set_hsv_coord(max_v=0.2, min_s=0.2, max_s=0.7),
 })

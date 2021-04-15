@@ -2,7 +2,7 @@
 import os
 import subprocess
 
-from libqtile import bar, layout, widget, hook
+from libqtile import bar, layout, widget, hook, qtile
 from libqtile.config import Click, Drag, Group, Key, Match, Screen
 from libqtile.lazy import lazy
 from libqtile.utils import guess_terminal, logger
@@ -10,7 +10,7 @@ from libqtile.utils import guess_terminal, logger
 from base_config import (mod, terminal, dgroups_key_binder, dgroups_app_rules,
                          follow_mouse_focus, bring_front_click, cursor_warp,
                          auto_fullscreen, focus_on_window_activation, wmname,
-                         group_chars, reconfigure_screens)
+                         group_chars, reconfigure_screens, respect_minimize_requests)
 from scratchpad import scratchpad
 from keys import keys
 
@@ -53,3 +53,10 @@ def on_startup():
     subprocess.Popen([startupscript],
                      stdout=subprocess.DEVNULL,
                      stderr=subprocess.DEVNULL)
+
+
+@hook.subscribe.startup
+def on_startup_always():
+    """Hide the top bar by default"""
+    for screen in getattr(qtile, 'screens', []):
+        screen.top.show(False)

@@ -117,7 +117,9 @@ qtile_keys = [
 
     # NOTE: fancy goto prompt:
     Key([mod], 'g', lazy.switchgroup(prompt='g')),
-    Key([mod, 'shift'], 'g', lazy.togroup(prompt='g>'))
+    Key([mod, 'shift'], 'g', lazy.togroup(prompt='g>')),
+
+    Key([mod], 'b', lazy.hide_show_bar(position='top')),
 ]
 
 basic_launch_keys = [
